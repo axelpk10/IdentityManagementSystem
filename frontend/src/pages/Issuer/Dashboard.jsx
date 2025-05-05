@@ -1,7 +1,9 @@
-// src/pages/Issuer/Dashboard.jsx
-import { useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
+
+import CreateCredential from "./CreateCredential";
+import ManageCredential from "./ManageCredential";
 
 export default function IssuerDashboard() {
   const { account, contract } = useAuth();
@@ -23,11 +25,6 @@ export default function IssuerDashboard() {
   const loadStats = async () => {
     setLoading(true);
     try {
-      // This would be an actual implementation that counts issued credentials
-      // For now we're just setting sample data
-      // In a real implementation, you'd query the contract events
-      // or use a dedicated function to get these stats
-
       // Simulating async operation
       setTimeout(() => {
         setStats({
@@ -118,6 +115,12 @@ export default function IssuerDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Nested Routes for CreateCredential and ManageCredential */}
+      <Routes>
+        <Route path="/create" element={<CreateCredential />} />
+        <Route path="/manage" element={<ManageCredential />} />
+      </Routes>
     </div>
   );
 }
