@@ -17,7 +17,6 @@ export default function VerifierDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load statistics when component mounts
     if (contract && account) {
       loadStats();
     }
@@ -26,8 +25,6 @@ export default function VerifierDashboard() {
   const loadStats = async () => {
     setLoading(true);
     try {
-      // In a real implementation, you would fetch these stats from your backend or local storage
-      // For now, we're using mock data
       setTimeout(() => {
         setStats({
           totalVerifications: 15,
@@ -42,17 +39,14 @@ export default function VerifierDashboard() {
     }
   };
 
-  // Navigate to verify credential page
   const goToVerifyCredential = () => {
     navigate("/verifier/verify");
   };
 
-  // Navigate to verification history page
   const goToVerificationHistory = () => {
     navigate("/verifier/history");
   };
 
-  // Navigate to bulk verification page
   const goToBulkVerification = () => {
     navigate("/verifier/bulk");
   };
@@ -135,7 +129,7 @@ export default function VerifierDashboard() {
         </div>
       </div>
 
-      {/* Nested Routes */}
+      {/* Nested Routes for Verification Pages */}
       <Routes>
         <Route path="/verify" element={<VerifyCredential />} />
         <Route path="/history" element={<VerificationHistory />} />

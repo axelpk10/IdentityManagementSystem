@@ -100,6 +100,7 @@ export function AuthProvider({ children }) {
       const isUserAdmin =
         userAddress.toLowerCase() === adminAddress.toLowerCase();
 
+      console.log("Connected wallet:", userAddress, "Role:", userRole);
       // Save all state
       setAccount(userAddress);
       setProvider(ethersProvider);

@@ -4,6 +4,7 @@ import Loading from "./common/Loading";
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
   const { account, role, isAdmin, loading } = useAuth();
+  console.log("ProtectedRoute check - Role:", role, "isAdmin:", isAdmin);
 
   if (loading) {
     return <Loading />;
