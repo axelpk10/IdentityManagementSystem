@@ -44,14 +44,17 @@ export default function CredentialDetail({
     setError(null);
 
     try {
-      // This is simplified as the actual contract would need a specific function
-      // to update privacy that's not fully implemented in the ABI you shared
-      // This would be where you call that contract function
+      // Call the contract's updateCredentialPrivacy function
+      const newPrivacyStatus = !credential.isPublic;
+      const tx = await contract.updateCredentialPrivacy(
+        account,
+        index,
+        newPrivacyStatus
+      );
 
-      // Placeholder for the actual contract call:
-      // await contract.updateCredentialPrivacy(account, index, !credential.isPublic);
+      // Wait for transaction to be mined
+      await tx.wait();
 
-      // For now, just simulate success
       setIsLoading(false);
 
       // Call the parent handler to refresh credentials

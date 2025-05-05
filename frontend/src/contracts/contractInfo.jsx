@@ -61,6 +61,31 @@ export const CONTRACT_ABI = [
         type: "address",
       },
       {
+        indexed: true,
+        internalType: "uint256",
+        name: "credentialIndex",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "isPublic",
+        type: "bool",
+      },
+    ],
+    name: "PrivacyUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
         indexed: false,
         internalType: "string",
         name: "role",
@@ -389,6 +414,29 @@ export const CONTRACT_ABI = [
       },
     ],
     name: "revokeCredential",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "isPublic",
+        type: "bool",
+      },
+    ],
+    name: "updateCredentialPrivacy",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

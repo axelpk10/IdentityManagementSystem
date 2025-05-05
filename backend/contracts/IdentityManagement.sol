@@ -22,6 +22,7 @@ contract IdentityManagement {
     event CredentialRevoked(address indexed user, uint index);
     event RoleAssigned(address indexed user, string role);
     event VerifierAdded(address indexed user, uint indexed credentialIndex, address verifier);
+    event PrivacyUpdated(address indexed user, uint indexed credentialIndex, bool isPublic);
     
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin allowed");
@@ -33,6 +34,11 @@ contract IdentityManagement {
             keccak256(abi.encodePacked(userRoles[msg.sender])) == keccak256(abi.encodePacked("issuer")),
             "Only issuers allowed"
         );
+        _;
+    }
+    
+    modifier onlyOwner(address user) {
+        require(msg.sender == user, "Only credential owner allowed");
         _;
     }
     
@@ -82,6 +88,20 @@ contract IdentityManagement {
         
         userCredentials[user][index].allowedVerifiers.push(verifier);
         emit VerifierAdded(user, index, verifier);
+    }
+    
+    // New function to update credential privacy
+    function updateCredentialPrivacy(address user, uint index, bool isPublic) public onlyOwner(user) {
+        require(index < userCredentials[user].length, "Invalid credential index");
+        require(userCredentials[user][index].isPublic != isPublic, "Privacy setting unchanged");
+        
+        userCredentials[user][index].isPublic = isPublic;
+        
+        // If making private from public, the allowedVerifiers list remains
+        // If making public from private, we could optionally clear the allowedVerifiers list to save gas
+        // but keeping them in case the credential is made private again
+        
+        emit PrivacyUpdated(user, index, isPublic);
     }
     
     function getCredential(address user, uint index) public view returns (Credential memory) {
