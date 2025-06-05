@@ -23,6 +23,7 @@ contract IdentityManagement {
     event RoleAssigned(address indexed user, string role);
     event VerifierAdded(address indexed user, uint indexed credentialIndex, address verifier);
     event PrivacyUpdated(address indexed user, uint indexed credentialIndex, bool isPublic);
+    event CredentialVerified(address indexed user, uint indexed credentialIndex, address indexed verifier);
     
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin allowed");
@@ -90,7 +91,6 @@ contract IdentityManagement {
         emit VerifierAdded(user, index, verifier);
     }
     
-    // New function to update credential privacy
     function updateCredentialPrivacy(address user, uint index, bool isPublic) public onlyOwner(user) {
         require(index < userCredentials[user].length, "Invalid credential index");
         require(userCredentials[user][index].isPublic != isPublic, "Privacy setting unchanged");
@@ -148,6 +148,58 @@ contract IdentityManagement {
         return publicCreds;
     }
     
+    // New function to get accessible credentials for a verifier
+    function getAccessibleCredentials(address user) public view returns (uint[] memory, Credential[] memory) {
+        uint count = 0;
+        
+        // First count credentials the verifier has access to
+        for (uint i = 0; i < userCredentials[user].length; i++) {
+            if (userCredentials[user][i].isPublic || isVerifierAllowed(user, i, msg.sender)) {
+                count++;
+            }
+        }
+        
+        // Then create and populate the arrays
+        uint[] memory indices = new uint[](count);
+        Credential[] memory accessibleCreds = new Credential[](count);
+        uint resultIndex = 0;
+        
+        for (uint i = 0; i < userCredentials[user].length; i++) {
+            if (userCredentials[user][i].isPublic || isVerifierAllowed(user, i, msg.sender)) {
+                indices[resultIndex] = i;
+                accessibleCreds[resultIndex] = userCredentials[user][i];
+                resultIndex++;
+            }
+        }
+        
+        return (indices, accessibleCreds);
+    }
+    
+    // New function to record credential verification
+    function verifyCredential(address user, uint index) public returns (bool) {
+        require(index < userCredentials[user].length, "Invalid index");
+        
+        Credential memory cred = userCredentials[user][index];
+        
+        // Check if the verifier has access to this credential
+        if (!cred.isPublic) {
+            require(isVerifierAllowed(user, index, msg.sender), "Not authorized to verify this credential");
+        }
+        
+        // Check if the credential is valid (not revoked)
+        bool isValid = !cred.isRevoked;
+        
+        // Check if the credential is expired
+        if (cred.expiresAt > 0) {
+            isValid = isValid && (block.timestamp <= cred.expiresAt);
+        }
+        
+        // Emit an event for the verification
+        emit CredentialVerified(user, index, msg.sender);
+        
+        return isValid;
+    }
+    
     function isVerifierAllowed(address user, uint index, address verifier) internal view returns (bool) {
         address[] memory allowed = userCredentials[user][index].allowedVerifiers;
         for (uint i = 0; i < allowed.length; i++) {
@@ -156,5 +208,10 @@ contract IdentityManagement {
             }
         }
         return false;
+    }
+    
+    // Helper function to get the credential count for a user
+    function getCredentialCount(address user) public view returns (uint) {
+        return userCredentials[user].length;
     }
 }

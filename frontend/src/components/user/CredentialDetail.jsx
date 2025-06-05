@@ -1,8 +1,13 @@
 // src/components/user/CredentialDetail.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Loading from "../common/Loading";
 import VerifierControl from "./VerifierControl";
+import {
+  getMetadataFromIPFS,
+  getFromIPFS,
+  getIPFSGatewayUrl,
+} from "../../services/ipfsService";
 
 export default function CredentialDetail({
   credential,
@@ -14,6 +19,39 @@ export default function CredentialDetail({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [documentMetadata, setDocumentMetadata] = useState(null);
+  const [documentUrl, setDocumentUrl] = useState(null);
+  const [loadingDocument, setLoadingDocument] = useState(true);
+
+  // Load document metadata and URL when component mounts
+  useEffect(() => {
+    const fetchDocumentData = async () => {
+      try {
+        setLoadingDocument(true);
+
+        // Get the metadata from IPFS
+        const metadata = await getMetadataFromIPFS(credential.ipfsHash);
+        setDocumentMetadata(metadata);
+
+        // If we have the document CID, create a gateway URL
+        if (metadata.documentCid) {
+          const url = getIPFSGatewayUrl(metadata.documentCid);
+          setDocumentUrl(url);
+        } else {
+          setError("Document not found in metadata");
+        }
+      } catch (err) {
+        console.error("Error loading document:", err);
+        setError("Failed to load document from IPFS");
+      } finally {
+        setLoadingDocument(false);
+      }
+    };
+
+    if (credential.ipfsHash) {
+      fetchDocumentData();
+    }
+  }, [credential.ipfsHash]);
 
   // Convert timestamp to date string
   const formatDate = (timestamp) => {
@@ -36,6 +74,22 @@ export default function CredentialDetail({
     if (credential.expiresAt && Date.now() / 1000 > credential.expiresAt)
       return "text-gray-600";
     return "text-green-600";
+  };
+
+  // Get file extension from URL or filename
+  const getFileType = () => {
+    if (!documentMetadata || !documentMetadata.documentCid) return null;
+
+    // If the metadata contains original filename info
+    if (documentMetadata.fileName) {
+      const extension = documentMetadata.fileName
+        .split(".")
+        .pop()
+        .toLowerCase();
+      return extension;
+    }
+
+    return null;
   };
 
   // Toggle credential privacy setting
@@ -68,9 +122,90 @@ export default function CredentialDetail({
     }
   };
 
+  // Render document viewer based on file type
+  const renderDocumentViewer = () => {
+    if (loadingDocument) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      );
+    }
+
+    if (!documentUrl) {
+      return (
+        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+          <p className="text-yellow-700">Document URL not available</p>
+        </div>
+      );
+    }
+
+    const fileType = getFileType();
+
+    // For PDF files
+    if (fileType === "pdf") {
+      return (
+        <iframe
+          src={documentUrl}
+          className="w-full h-96 border rounded"
+          title="PDF Document"
+        />
+      );
+    }
+
+    // For images (PNG, JPG, JPEG, GIF)
+    if (["png", "jpg", "jpeg", "gif"].includes(fileType)) {
+      return (
+        <div className="flex justify-center">
+          <img
+            src={documentUrl}
+            alt="Credential Document"
+            className="max-w-full max-h-96 object-contain"
+          />
+        </div>
+      );
+    }
+
+    // For other file types or when type can't be determined
+    return (
+      <div className="mt-4">
+        <a
+          href={documentUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          View Document
+        </a>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
         <div className="flex justify-between items-center border-b p-4">
           <h2 className="text-xl font-semibold">{credential.title}</h2>
           <button
@@ -95,7 +230,7 @@ export default function CredentialDetail({
         </div>
 
         <div className="p-4 overflow-auto max-h-[calc(90vh-8rem)]">
-          {error && (
+          {error && !loadingDocument && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
               <p className="text-red-700">{error}</p>
             </div>
@@ -129,10 +264,27 @@ export default function CredentialDetail({
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">IPFS Hash</h3>
+              <h3 className="text-sm font-medium text-gray-500">
+                Metadata Hash
+              </h3>
               <p className="mt-1 font-mono text-sm break-all">
-                {credential.ipfsHash}
+                <a
+                  href={`http://localhost:8080/ipfs/${credential.ipfsHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-600 hover:text-purple-800"
+                >
+                  {credential.ipfsHash.substring(0, 15)}...
+                </a>
               </p>
+            </div>
+          </div>
+
+          {/* Document Display Section */}
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Document</h3>
+            <div className="border rounded-md p-2">
+              {renderDocumentViewer()}
             </div>
           </div>
 

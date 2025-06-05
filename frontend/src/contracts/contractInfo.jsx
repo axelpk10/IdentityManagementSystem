@@ -67,6 +67,31 @@ export const CONTRACT_ABI = [
         type: "uint256",
       },
       {
+        indexed: true,
+        internalType: "address",
+        name: "verifier",
+        type: "address",
+      },
+    ],
+    name: "CredentialVerified",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "credentialIndex",
+        type: "uint256",
+      },
+      {
         indexed: false,
         internalType: "bool",
         name: "isPublic",
@@ -172,6 +197,72 @@ export const CONTRACT_ABI = [
     name: "assignRole",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "getAccessibleCredentials",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+      {
+        components: [
+          {
+            internalType: "string",
+            name: "title",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "issuer",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "ipfsHash",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "issuedAt",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "expiresAt",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isRevoked",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isPublic",
+            type: "bool",
+          },
+          {
+            internalType: "address[]",
+            name: "allowedVerifiers",
+            type: "address[]",
+          },
+        ],
+        internalType: "struct IdentityManagement.Credential[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -296,6 +387,25 @@ export const CONTRACT_ABI = [
         internalType: "struct IdentityManagement.Credential",
         name: "",
         type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "getCredentialCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -458,6 +568,30 @@ export const CONTRACT_ABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "verifyCredential",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
     type: "function",
   },
 ];

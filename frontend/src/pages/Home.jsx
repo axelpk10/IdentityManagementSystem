@@ -20,7 +20,7 @@ export default function Home() {
   }, [account, role, isAdmin, navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+    <div className="flex flex-col items-center justify-center height-[100vh] bg-gray-50 p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <h1 className="text-2xl font-bold text-center mb-6">
           Welcome to the Identity Management System

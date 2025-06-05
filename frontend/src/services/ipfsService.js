@@ -83,3 +83,51 @@ export const getIPFSGatewayUrl = (cid) => {
   // For production, you might use a public gateway like:
   // return `https://ipfs.io/ipfs/${cid}`;
 };
+
+/**
+ * Retrieves a document from IPFS using the metadata CID
+ * First gets the metadata, then retrieves the actual document using the documentCid
+ * @param {string} metadataCid - The IPFS CID for the metadata
+ * @returns {Promise<{blob: Blob, metadata: Object}>} - The document blob and metadata
+ */
+export const getDocumentFromMetadata = async (metadataCid) => {
+  try {
+    // First get the metadata
+    const metadata = await getMetadataFromIPFS(metadataCid);
+
+    if (!metadata.documentCid) {
+      throw new Error("No document CID found in metadata");
+    }
+
+    // Then get the actual document using the documentCid from metadata
+    const documentBlob = await getFromIPFS(metadata.documentCid);
+
+    return {
+      blob: documentBlob,
+      metadata: metadata,
+    };
+  } catch (error) {
+    console.error("Error retrieving document from metadata:", error);
+    throw new Error("Failed to retrieve document from IPFS metadata");
+  }
+};
+
+/**
+ * Returns a direct URL to the document from the metadata CID
+ * @param {string} metadataCid - The IPFS CID for the metadata
+ * @returns {Promise<string>} - The direct URL to the document
+ */
+export const getDocumentUrlFromMetadata = async (metadataCid) => {
+  try {
+    const metadata = await getMetadataFromIPFS(metadataCid);
+
+    if (!metadata.documentCid) {
+      throw new Error("No document CID found in metadata");
+    }
+
+    return getIPFSGatewayUrl(metadata.documentCid);
+  } catch (error) {
+    console.error("Error getting document URL:", error);
+    throw new Error("Failed to get document URL from metadata");
+  }
+};

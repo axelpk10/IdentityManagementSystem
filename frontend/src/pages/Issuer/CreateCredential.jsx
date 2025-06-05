@@ -12,6 +12,7 @@ export default function CreateCredential() {
   const [formData, setFormData] = useState({
     userAddress: "",
     title: "",
+    issuer: "",
     description: "",
     isPublic: true,
     expiryDate: "", // YYYY-MM-DD format
@@ -42,6 +43,11 @@ export default function CreateCredential() {
 
     if (!formData.title.trim()) {
       setError("Title is required");
+      return false;
+    }
+
+    if (!formData.issuer.trim()) {
+      setError("Issuer name is required");
       return false;
     }
 
@@ -89,7 +95,7 @@ export default function CreateCredential() {
       const tx = await contract.issueCredential(
         formData.userAddress,
         formData.title,
-        "Self", // Current issuer name (could be fetched from a profile)
+        formData.issuer, // Current issuer name (could be fetched from a profile)
         metadataCid,
         formData.isPublic,
         expiryTimestamp
@@ -250,6 +256,25 @@ export default function CreateCredential() {
               onChange={handleChange}
               className="block w-full rounded-md border border-gray-300 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 px-3 py-2"
               placeholder="e.g. College Degree Certificate"
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="issuer"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Issuer Name *
+            </label>
+            <input
+              type="text"
+              id="issuer"
+              name="issuer"
+              value={formData.issuer}
+              onChange={handleChange}
+              className="block w-full rounded-md border border-gray-300 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 px-3 py-2"
+              placeholder="e.g. University of Technology"
               required
             />
           </div>
